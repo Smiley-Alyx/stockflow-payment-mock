@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Domain\Payment\Services\Authorization\PaymentAuthorizationService;
+use App\Domain\Payment\Services\Capture\PaymentCaptureService;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
+use App\Domain\Payment\Services\PaymentLedger;
+use App\Domain\Payment\Services\Refund\PaymentRefundService;
 use App\Domain\Payment\Services\Sandbox\SandboxBalanceService;
 use App\Domain\Payment\Services\Sandbox\SandboxCardBehaviorEvaluator;
 use App\Domain\Payment\Services\Sandbox\SandboxCardCatalog;
@@ -27,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SandboxBalanceService::class);
         $this->app->singleton(PaymentIdempotencyService::class);
         $this->app->singleton(PaymentAuthorizationService::class);
+        $this->app->singleton(PaymentLedger::class);
+        $this->app->singleton(PaymentCaptureService::class);
+        $this->app->singleton(PaymentRefundService::class);
     }
 
     /**

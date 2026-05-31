@@ -12,6 +12,10 @@ class IdempotencyRecord extends Model
 
     public const OPERATION_AUTHORIZATION = 'payment.authorization';
 
+    public const OPERATION_CAPTURE = 'payment.capture';
+
+    public const OPERATION_REFUND = 'payment.refund';
+
     public $incrementing = false;
 
     protected $keyType = 'string';
