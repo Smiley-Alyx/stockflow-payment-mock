@@ -4,6 +4,7 @@ namespace App\Infrastructure\Messaging\RabbitMq;
 
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 
 class PaymentRequestConsumer
@@ -39,7 +40,9 @@ class PaymentRequestConsumer
                 no_ack: false,
                 exclusive: false,
                 nowait: false,
-                callback: fn (AMQPMessage $message): void => $this->requestProcessor->process($channel, $message),
+                callback: function (AMQPMessage $message) use ($channel): void {
+                    $this->requestProcessor->process($channel, $message);
+                },
             );
 
             $channel->basic_consume(
@@ -49,7 +52,9 @@ class PaymentRequestConsumer
                 no_ack: false,
                 exclusive: false,
                 nowait: false,
-                callback: fn (AMQPMessage $message): void => $this->retryRequeueHandler->handle($channel, $message),
+                callback: function (AMQPMessage $message) use ($channel): void {
+                    $this->retryRequeueHandler->handle($channel, $message);
+                },
             );
 
             Log::info('payment request consumer started', [
@@ -60,7 +65,11 @@ class PaymentRequestConsumer
             ]);
 
             while ($channel->is_consuming() && ! $this->shouldStop) {
-                $channel->wait(null, false, $this->config->consumerTimeoutSeconds);
+                try {
+                    $channel->wait(null, false, $this->config->consumerTimeoutSeconds);
+                } catch (AMQPTimeoutException) {
+                    // Poll again so signal handlers can stop an idle consumer.
+                }
             }
 
             Log::info('payment request consumer stopped gracefully');
