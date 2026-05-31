@@ -70,6 +70,15 @@ make docker-down
 | `GET` | `/health` | Liveness probe |
 | `GET` | `/ready` | Readiness probe (database connectivity) |
 | `GET` | `/up` | Laravel built-in health check |
+| `GET` | `/sandbox/cards` | List sandbox card tokens and balances |
+| `POST` | `/sandbox/tokens` | Map known test PAN to sandbox token (optional) |
+| `GET` | `/payments` | List payments |
+| `GET` | `/payments/{payment_id}` | Payment details |
+| `GET` | `/payment-attempts` | List payment attempts |
+| `GET` | `/payment-attempts/{attempt_id}` | Attempt details |
+| `GET` | `/debug/failure-mode` | Current provider failure simulation mode |
+| `POST` | `/debug/failure-mode` | Set provider failure simulation mode |
+| `POST` | `/debug/reset` | Reset demo data and failure mode |
 
 ## Configuration
 
@@ -81,6 +90,8 @@ make docker-down
 | `RABBITMQ_PORT` | `5672` | RabbitMQ port |
 | `RABBITMQ_USER` | `stockflow` | RabbitMQ username |
 | `RABBITMQ_PASSWORD` | `stockflow` | RabbitMQ password |
+| `PAYMENT_MOCK_DEBUG_ENABLED` | `false` | Enable `/debug/*` endpoints |
+| `PAYMENT_MOCK_ALLOW_TEST_PAN_TOKENIZATION` | `false` | Enable `POST /sandbox/tokens` |
 
 ## Portfolio scope
 

@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function (): void {
             Route::middleware([])
                 ->group(base_path('routes/health.php'));
+
+            Route::middleware([])
+                ->group(base_path('routes/api.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
