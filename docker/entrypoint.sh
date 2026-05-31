@@ -12,5 +12,6 @@ fi
 mkdir -p database
 touch database/database.sqlite
 php artisan migrate --force
+php artisan db:seed --class=Database\\Seeders\\SandboxCardSeeder --force
 
 exec "$@"

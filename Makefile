@@ -6,6 +6,7 @@ install:
 
 migrate:
 	php artisan migrate
+	php artisan db:seed --class=Database\\Seeders\\SandboxCardSeeder --force
 
 serve:
 	php artisan serve --host=0.0.0.0 --port=8081
