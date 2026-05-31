@@ -115,8 +115,16 @@ The worker consumes:
 - `payment.capture.requested.v1`
 - `payment.refund.requested.v1`
 
-Outgoing result events are wired through `PaymentEventPublisher` and will be
-published to RabbitMQ in the next step.
+After processing, it publishes result events to the same exchange:
+
+- `payment.authorization.approved.v1` / `payment.authorization.declined.v1`
+- `payment.capture.completed.v1` / `payment.capture.failed.v1`
+- `payment.refund.completed.v1` / `payment.refund.failed.v1`
+
+Outgoing headers preserve `correlation_id` and `idempotency_key` from the request,
+set `causation_id` to the request `message_id`, and assign a new `message_id` per event.
+
+Set `PAYMENT_MOCK_PUBLISH_EVENTS=false` to disable AMQP publishing (tests use the null publisher).
 
 ## Configuration
 
@@ -130,6 +138,7 @@ published to RabbitMQ in the next step.
 | `RABBITMQ_PASSWORD` | `stockflow` | RabbitMQ password |
 | `PAYMENT_MOCK_DEBUG_ENABLED` | `false` | Enable `/debug/*` endpoints |
 | `PAYMENT_MOCK_ALLOW_TEST_PAN_TOKENIZATION` | `false` | Enable `POST /sandbox/tokens` |
+| `PAYMENT_MOCK_PUBLISH_EVENTS` | `true` | Publish payment result events to RabbitMQ |
 
 ## Portfolio scope
 

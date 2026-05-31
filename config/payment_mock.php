@@ -27,5 +27,6 @@ return [
         'prefetch_count' => (int) env('RABBITMQ_PREFETCH_COUNT', 1),
         'consumer_timeout_seconds' => (int) env('RABBITMQ_CONSUMER_TIMEOUT_SECONDS', 30),
         'setup_topology' => env('RABBITMQ_SETUP_TOPOLOGY', true),
+        'publish_events' => env('PAYMENT_MOCK_PUBLISH_EVENTS', true),
     ],
 ];

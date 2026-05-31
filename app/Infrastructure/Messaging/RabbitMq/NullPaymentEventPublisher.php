@@ -27,7 +27,7 @@ class NullPaymentEventPublisher implements PaymentEventPublisher
 
     private function log(string $operation, IncomingMessage $incoming, string $outcome): void
     {
-        Log::debug('payment event publish deferred until RabbitMQ publisher is enabled', [
+        Log::debug('payment event publish skipped (PAYMENT_MOCK_PUBLISH_EVENTS=false)', [
             'operation' => $operation,
             'outcome' => $outcome,
             'routing_key' => $incoming->routingKey,

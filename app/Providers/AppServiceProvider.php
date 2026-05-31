@@ -19,9 +19,13 @@ use App\Domain\Payment\Services\Sandbox\SensitiveDataMasker;
 use App\Infrastructure\Messaging\RabbitMq\Contracts\PaymentEventPublisher;
 use App\Infrastructure\Messaging\RabbitMq\MessageHeaderValidator;
 use App\Infrastructure\Messaging\RabbitMq\NullPaymentEventPublisher;
+use App\Infrastructure\Messaging\RabbitMq\OutgoingMessageHeadersFactory;
 use App\Infrastructure\Messaging\RabbitMq\RabbitMqConfig;
 use App\Infrastructure\Messaging\RabbitMq\RabbitMqConnectionFactory;
+use App\Infrastructure\Messaging\RabbitMq\RabbitMqMessagePublisher;
+use App\Infrastructure\Messaging\RabbitMq\RabbitMqPaymentEventPublisher;
 use App\Infrastructure\Messaging\RabbitMq\RabbitMqTopologyManager;
+use App\Application\Mappers\PaymentEventPayloadMapper;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -50,7 +54,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RabbitMqTopologyManager::class);
         $this->app->singleton(MessageHeaderValidator::class);
         $this->app->singleton(PaymentMessageMapper::class);
-        $this->app->singleton(PaymentEventPublisher::class, NullPaymentEventPublisher::class);
+        $this->app->singleton(OutgoingMessageHeadersFactory::class);
+        $this->app->singleton(PaymentEventPayloadMapper::class);
+        $this->app->singleton(RabbitMqMessagePublisher::class);
+        $this->app->singleton(PaymentEventPublisher::class, function ($app): PaymentEventPublisher {
+            if (! config('payment_mock.rabbitmq.publish_events')) {
+                return $app->make(NullPaymentEventPublisher::class);
+            }
+
+            return $app->make(RabbitMqPaymentEventPublisher::class);
+        });
     }
 
     /**

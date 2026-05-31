@@ -6,7 +6,6 @@ use App\Application\Handlers\PaymentMessageDispatcher;
 use App\Infrastructure\Messaging\RabbitMq\Exceptions\InvalidMessageException;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
-use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use Throwable;
 
