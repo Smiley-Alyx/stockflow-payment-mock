@@ -10,11 +10,13 @@ services:
       DB_DATABASE: /app/database/database.sqlite
       PAYMENT_MOCK_SERVICE_NAME: stockflow-payment-mock
       PAYMENT_MOCK_HTTP_PORT: 8080
+      PAYMENT_MOCK_DEBUG_ENABLED: "true"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: stockflow
       RABBITMQ_PASSWORD: stockflow
       RABBITMQ_VHOST: /
+      RABBITMQ_SETUP_TOPOLOGY: "true"
     ports:
       - "8081:8080"
     volumes:
@@ -22,6 +24,30 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  payment-mock-worker:
+    build:
+      context: .
+    command: ["php", "artisan", "payment-mock:consume-requests"]
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/database/database.sqlite
+      PAYMENT_MOCK_SERVICE_NAME: stockflow-payment-mock
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: stockflow
+      RABBITMQ_PASSWORD: stockflow
+      RABBITMQ_VHOST: /
+      RABBITMQ_SETUP_TOPOLOGY: "true"
+    volumes:
+      - payment-mock-data:/app/database
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      payment-mock:
+        condition: service_started
 
   rabbitmq:
     image: rabbitmq:4.1-management-alpine

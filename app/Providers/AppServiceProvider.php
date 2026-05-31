@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Application\Mappers\PaymentMessageMapper;
 use App\Domain\Payment\Services\Authorization\PaymentAuthorizationService;
 use App\Domain\Payment\Services\Capture\PaymentCaptureService;
 use App\Domain\Payment\Services\Debug\DemoResetService;
@@ -15,6 +16,12 @@ use App\Domain\Payment\Services\Sandbox\SandboxCardCatalog;
 use App\Domain\Payment\Services\Sandbox\SandboxPaymentMethodResolver;
 use App\Domain\Payment\Services\Sandbox\SandboxTestCardTokenizer;
 use App\Domain\Payment\Services\Sandbox\SensitiveDataMasker;
+use App\Infrastructure\Messaging\RabbitMq\Contracts\PaymentEventPublisher;
+use App\Infrastructure\Messaging\RabbitMq\MessageHeaderValidator;
+use App\Infrastructure\Messaging\RabbitMq\NullPaymentEventPublisher;
+use App\Infrastructure\Messaging\RabbitMq\RabbitMqConfig;
+use App\Infrastructure\Messaging\RabbitMq\RabbitMqConnectionFactory;
+use App\Infrastructure\Messaging\RabbitMq\RabbitMqTopologyManager;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -37,6 +44,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentRefundService::class);
         $this->app->singleton(FailureModeManager::class);
         $this->app->singleton(DemoResetService::class);
+
+        $this->app->singleton(RabbitMqConfig::class, fn (): RabbitMqConfig => RabbitMqConfig::fromConfig());
+        $this->app->singleton(RabbitMqConnectionFactory::class);
+        $this->app->singleton(RabbitMqTopologyManager::class);
+        $this->app->singleton(MessageHeaderValidator::class);
+        $this->app->singleton(PaymentMessageMapper::class);
+        $this->app->singleton(PaymentEventPublisher::class, NullPaymentEventPublisher::class);
     }
 
     /**

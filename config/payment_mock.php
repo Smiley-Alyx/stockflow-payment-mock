@@ -12,4 +12,20 @@ return [
     'debug' => [
         'enabled' => env('PAYMENT_MOCK_DEBUG_ENABLED', env('APP_DEBUG', false)),
     ],
+
+    'rabbitmq' => [
+        'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+        'port' => (int) env('RABBITMQ_PORT', 5672),
+        'user' => env('RABBITMQ_USER', 'stockflow'),
+        'password' => env('RABBITMQ_PASSWORD', 'stockflow'),
+        'vhost' => env('RABBITMQ_VHOST', '/'),
+        'exchange' => env('RABBITMQ_EXCHANGE', 'stockflow.payment'),
+        'dead_letter_exchange' => env('RABBITMQ_DLX', 'stockflow.payment.dlx'),
+        'requests_queue' => env('RABBITMQ_REQUESTS_QUEUE', 'stockflow.payment.requests'),
+        'retry_queue' => env('RABBITMQ_RETRY_QUEUE', 'stockflow.payment.requests.retry'),
+        'dlq' => env('RABBITMQ_DLQ', 'stockflow.payment.requests.dlq'),
+        'prefetch_count' => (int) env('RABBITMQ_PREFETCH_COUNT', 1),
+        'consumer_timeout_seconds' => (int) env('RABBITMQ_CONSUMER_TIMEOUT_SECONDS', 30),
+        'setup_topology' => env('RABBITMQ_SETUP_TOPOLOGY', true),
+    ],
 ];

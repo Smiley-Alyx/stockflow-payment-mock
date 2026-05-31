@@ -1,4 +1,4 @@
-.PHONY: docker-down docker-up install migrate serve test
+.PHONY: consume docker-down docker-up install migrate serve test
 
 install:
 	composer install
@@ -10,6 +10,9 @@ migrate:
 
 serve:
 	php artisan serve --host=0.0.0.0 --port=8081
+
+consume:
+	php artisan payment-mock:consume-requests
 
 test:
 	php artisan test

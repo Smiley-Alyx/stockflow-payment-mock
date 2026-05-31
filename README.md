@@ -89,6 +89,35 @@ AsyncAPI and JSON Schemas live in [`contracts/`](contracts/):
 - [`contracts/examples/`](contracts/examples/)
 - [`contracts/README.md`](contracts/README.md) — headers, correlation, idempotency
 
+## RabbitMQ consumer
+
+Run the request consumer locally:
+
+```bash
+make consume
+```
+
+Docker Compose starts a worker service automatically:
+
+```bash
+make docker-up
+```
+
+Consumer command:
+
+```bash
+php artisan payment-mock:consume-requests
+```
+
+The worker consumes:
+
+- `payment.authorization.requested.v1`
+- `payment.capture.requested.v1`
+- `payment.refund.requested.v1`
+
+Outgoing result events are wired through `PaymentEventPublisher` and will be
+published to RabbitMQ in the next step.
+
 ## Configuration
 
 | Environment variable | Default | Description |
