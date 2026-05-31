@@ -35,10 +35,12 @@ class PaymentMessageDispatcherTest extends TestCase
         $publisher = Mockery::mock(PaymentEventPublisher::class);
         $publisher->shouldReceive('publishAuthorizationResult')->once();
 
+        $metricsRecorder = $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class);
+
         $dispatcher = new PaymentMessageDispatcher(
-            new AuthorizationRequestedHandler(new PaymentMessageMapper, $authorizationService, $publisher),
-            new CaptureRequestedHandler(new PaymentMessageMapper, Mockery::mock(PaymentCaptureService::class), $publisher),
-            new RefundRequestedHandler(new PaymentMessageMapper, Mockery::mock(PaymentRefundService::class), $publisher),
+            new AuthorizationRequestedHandler(new PaymentMessageMapper, $authorizationService, $publisher, $metricsRecorder),
+            new CaptureRequestedHandler(new PaymentMessageMapper, Mockery::mock(PaymentCaptureService::class), $publisher, $metricsRecorder),
+            new RefundRequestedHandler(new PaymentMessageMapper, Mockery::mock(PaymentRefundService::class), $publisher, $metricsRecorder),
         );
 
         $dispatcher->dispatch($incoming);

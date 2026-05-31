@@ -3,6 +3,8 @@
 namespace App\Infrastructure\Messaging\RabbitMq;
 
 use App\Infrastructure\Messaging\RabbitMq\Exceptions\InvalidMessageException;
+use App\Infrastructure\Observability\PaymentMetricsRecorder;
+use App\Support\PaymentStructuredLogger;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -12,6 +14,7 @@ class PaymentRetryRequeueHandler
 {
     public function __construct(
         private readonly RabbitMqConfig $config,
+        private readonly PaymentMetricsRecorder $metricsRecorder,
     ) {}
 
     public function handle(AMQPChannel $channel, AMQPMessage $message): void
@@ -41,10 +44,12 @@ class PaymentRetryRequeueHandler
             $metadata->originalRoutingKey,
         );
 
-        Log::info('payment request requeued from retry queue', [
+        $this->metricsRecorder->recordRetryRequeued($metadata->originalRoutingKey);
+
+        Log::info('payment request requeued from retry queue', PaymentStructuredLogger::context('payment.request.retry_requeued', [
             'routing_key' => $metadata->originalRoutingKey,
             'retry_count' => $metadata->retryCount,
-        ]);
+        ]));
 
         $channel->basic_ack($deliveryTag);
     }

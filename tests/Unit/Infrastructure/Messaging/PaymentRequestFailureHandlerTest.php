@@ -37,6 +37,7 @@ class PaymentRequestFailureHandlerTest extends TestCase
             $this->retryPolicy(maxRetryAttempts: 3),
             $retryPublisher,
             $dlqPublisher,
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
 
         $message = new AMQPMessage('{}');
@@ -60,6 +61,7 @@ class PaymentRequestFailureHandlerTest extends TestCase
             $this->retryPolicy(maxRetryAttempts: 3),
             $retryPublisher,
             $dlqPublisher,
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
 
         $message = new AMQPMessage('{}');
@@ -87,6 +89,7 @@ class PaymentRequestFailureHandlerTest extends TestCase
             $this->retryPolicy(maxRetryAttempts: 3),
             $retryPublisher,
             $dlqPublisher,
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
 
         $message = new AMQPMessage('{}', [
@@ -108,6 +111,7 @@ class PaymentRequestFailureHandlerTest extends TestCase
             $this->retryPolicy(maxRetryAttempts: 3),
             Mockery::mock(PaymentRequestRetryPublisher::class),
             Mockery::mock(PaymentDlqPublisher::class),
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
 
         $message = new AMQPMessage('{}');

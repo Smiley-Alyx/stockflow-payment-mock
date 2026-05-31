@@ -7,10 +7,12 @@ use App\Domain\Payment\DTO\AuthorizationResult;
 use App\Domain\Payment\DTO\CaptureResult;
 use App\Domain\Payment\DTO\RefundResult;
 use App\Domain\Payment\Models\PublishedEventRecord;
+use App\Infrastructure\Observability\PaymentMetricsRecorder;
 use App\Domain\Payment\Services\Debug\ProviderDegradationSimulator;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
 use App\Infrastructure\Messaging\RabbitMq\Contracts\PaymentEventPublisher;
 use App\Infrastructure\Messaging\RabbitMq\Exceptions\PublishedEventConflictException;
+use App\Support\PaymentStructuredLogger;
 use Illuminate\Support\Facades\Log;
 
 class IdempotentPaymentEventPublisher implements PaymentEventPublisher
@@ -21,6 +23,7 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
         private readonly PublishedEventStore $publishedEventStore,
         private readonly PaymentIdempotencyService $idempotencyService,
         private readonly ProviderDegradationSimulator $degradationSimulator,
+        private readonly PaymentMetricsRecorder $metricsRecorder,
     ) {}
 
     public function publishAuthorizationResult(IncomingMessage $incoming, AuthorizationResult $result): void
@@ -109,8 +112,12 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
     ): void {
         $this->degradationSimulator->assertPublishAllowed();
         $this->messagePublisher->publish($event);
+        $this->metricsRecorder->recordEventPublished(
+            routingKey: $event->routingKey,
+            idempotentReplay: $storedReplay,
+        );
 
-        Log::info('payment event published', [
+        Log::info('payment event published', PaymentStructuredLogger::context('payment.event.published', [
             'routing_key' => $event->routingKey,
             'correlation_id' => $event->headers->correlationId,
             'causation_id' => $event->headers->causationId,
@@ -118,16 +125,21 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
             'idempotency_key' => $event->headers->idempotencyKey,
             'idempotent_event_replay' => $storedReplay,
             'domain_idempotent_replay' => $domainIdempotentReplay,
-        ]);
+        ]));
 
         if (! $storedReplay && $this->degradationSimulator->shouldDuplicatePublishedResponse()) {
             $this->messagePublisher->publish($event);
+            $this->metricsRecorder->recordEventPublished(
+                routingKey: $event->routingKey,
+                idempotentReplay: false,
+                duplicate: true,
+            );
 
-            Log::info('payment event duplicate published', [
+            Log::info('payment event duplicate published', PaymentStructuredLogger::context('payment.event.duplicate_published', [
                 'routing_key' => $event->routingKey,
                 'message_id' => $event->headers->messageId,
                 'idempotency_key' => $event->headers->idempotencyKey,
-            ]);
+            ]));
         }
     }
 

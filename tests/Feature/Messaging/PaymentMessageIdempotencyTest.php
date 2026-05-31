@@ -52,25 +52,30 @@ class PaymentMessageIdempotencyTest extends TestCase
             new PublishedEventStore,
             $this->app->make(PaymentIdempotencyService::class),
             $this->app->make(\App\Domain\Payment\Services\Debug\ProviderDegradationSimulator::class),
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
 
         $mapper = new PaymentMessageMapper;
+        $metricsRecorder = $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class);
 
         $this->dispatcher = new PaymentMessageDispatcher(
             new AuthorizationRequestedHandler(
                 $mapper,
                 $this->app->make(PaymentAuthorizationService::class),
                 $eventPublisher,
+                $metricsRecorder,
             ),
             new CaptureRequestedHandler(
                 $mapper,
                 $this->app->make(PaymentCaptureService::class),
                 $eventPublisher,
+                $metricsRecorder,
             ),
             new RefundRequestedHandler(
                 $mapper,
                 $this->app->make(PaymentRefundService::class),
                 $eventPublisher,
+                $metricsRecorder,
             ),
         );
     }

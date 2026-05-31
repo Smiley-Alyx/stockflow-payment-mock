@@ -33,6 +33,8 @@ use App\Infrastructure\Messaging\RabbitMq\RabbitMqConfig;
 use App\Infrastructure\Messaging\RabbitMq\RabbitMqConnectionFactory;
 use App\Infrastructure\Messaging\RabbitMq\RabbitMqMessagePublisher;
 use App\Infrastructure\Messaging\RabbitMq\RabbitMqTopologyManager;
+use App\Infrastructure\Observability\PaymentMetricsRecorder;
+use App\Infrastructure\Observability\Prometheus\PrometheusRegistry;
 use App\Application\Mappers\PaymentEventPayloadMapper;
 use Illuminate\Support\ServiceProvider;
 
@@ -57,6 +59,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(FailureModeManager::class);
         $this->app->singleton(ProviderDegradationSimulator::class);
         $this->app->singleton(DemoResetService::class);
+
+        $this->app->singleton(PrometheusRegistry::class);
+        $this->app->singleton(PaymentMetricsRecorder::class);
 
         $this->app->singleton(RabbitMqConfig::class, fn (): RabbitMqConfig => RabbitMqConfig::fromConfig());
         $this->app->singleton(RabbitMqConnectionFactory::class);

@@ -175,6 +175,21 @@ Set via `POST /debug/failure-mode` (`{"mode":"always_decline"}`):
 | `duplicate_response` | Publish the same outbound event twice |
 | `publish_failure` | Throw retryable error while publishing result events |
 
+## Observability
+
+Prometheus metrics are exposed at `GET /metrics` when `PAYMENT_MOCK_METRICS_ENABLED=true`.
+
+| Metric | Description |
+| --- | --- |
+| `payment_requests_total` | Processed RabbitMQ requests by operation/outcome |
+| `payment_processing_duration_seconds` | Request processing latency histogram |
+| `payment_events_published_total` | Outbound payment events |
+| `payment_request_retries_total` | Messages scheduled for retry |
+| `payment_request_dlq_total` | Messages moved to DLQ |
+| `payment_failure_mode_active` | Current debug failure mode gauge |
+
+Structured logs include `service` and `event` fields on payment lifecycle log lines.
+
 ## Configuration
 
 | Environment variable | Default | Description |
@@ -191,6 +206,7 @@ Set via `POST /debug/failure-mode` (`{"mode":"always_decline"}`):
 | `RABBITMQ_MAX_RETRY_ATTEMPTS` | `3` | Retry count before a request is moved to DLQ |
 | `RABBITMQ_RETRY_DELAY_MS` | `5000` | Delay before a retried request is requeued |
 | `PAYMENT_MOCK_PROCESSING_DELAY_MS` | `2000` | Artificial latency for `processing_delay` mode |
+| `PAYMENT_MOCK_METRICS_ENABLED` | `true` | Expose Prometheus metrics at `GET /metrics` |
 
 ## Portfolio scope
 

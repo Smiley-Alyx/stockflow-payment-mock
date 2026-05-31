@@ -3,6 +3,8 @@
 namespace App\Infrastructure\Messaging\RabbitMq;
 
 use App\Infrastructure\Messaging\RabbitMq\Exceptions\InvalidMessageException;
+use App\Infrastructure\Observability\PaymentMetricsRecorder;
+use App\Support\PaymentStructuredLogger;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -14,14 +16,17 @@ class PaymentRequestFailureHandler
         private readonly MessageRetryPolicy $retryPolicy,
         private readonly PaymentRequestRetryPublisher $retryPublisher,
         private readonly PaymentDlqPublisher $dlqPublisher,
+        private readonly PaymentMetricsRecorder $metricsRecorder,
     ) {}
 
     public function handleInvalidMessage(AMQPChannel $channel, AMQPMessage $message, InvalidMessageException $exception): void
     {
-        Log::warning('invalid payment request message rejected', [
+        Log::warning('invalid payment request message rejected', PaymentStructuredLogger::context('payment.request.invalid', [
             'error' => $exception->getMessage(),
             'routing_key' => $message->getRoutingKey(),
-        ]);
+        ]));
+
+        $this->metricsRecorder->recordInvalidMessage((string) ($message->getRoutingKey() ?? 'unknown'));
 
         $channel->basic_reject($message->getDeliveryTag(), false);
     }
@@ -31,11 +36,11 @@ class PaymentRequestFailureHandler
         $deliveryTag = $message->getDeliveryTag();
         $metadata = MessageRetryMetadata::fromAmqpMessage($message);
 
-        Log::error('payment request processing failed', [
+        Log::error('payment request processing failed', PaymentStructuredLogger::context('payment.request.failed', [
             'error' => $exception->getMessage(),
             'routing_key' => $message->getRoutingKey(),
             'retry_count' => $metadata->retryCount,
-        ]);
+        ]));
 
         if (! $this->retryPolicy->isRetryable($exception)) {
             $this->moveToDlq($channel, $message, $exception);
@@ -46,11 +51,12 @@ class PaymentRequestFailureHandler
 
         if ($this->retryPolicy->shouldRetry($metadata->retryCount)) {
             $this->retryPublisher->publish($channel, $message, $metadata->retryCount + 1);
+            $this->metricsRecorder->recordRetryScheduled((string) ($message->getRoutingKey() ?? 'unknown'));
 
-            Log::info('payment request scheduled for retry', [
+            Log::info('payment request scheduled for retry', PaymentStructuredLogger::context('payment.request.retry_scheduled', [
                 'routing_key' => $message->getRoutingKey(),
                 'retry_count' => $metadata->retryCount + 1,
-            ]);
+            ]));
 
             $channel->basic_ack($deliveryTag);
 
@@ -64,10 +70,14 @@ class PaymentRequestFailureHandler
     private function moveToDlq(AMQPChannel $channel, AMQPMessage $message, Throwable $exception): void
     {
         $this->dlqPublisher->publish($channel, $message, $exception);
+        $this->metricsRecorder->recordDlq(
+            (string) ($message->getRoutingKey() ?? 'unknown'),
+            class_basename($exception),
+        );
 
-        Log::warning('payment request moved to dlq', [
+        Log::warning('payment request moved to dlq', PaymentStructuredLogger::context('payment.request.dlq', [
             'routing_key' => $message->getRoutingKey(),
             'failure_reason' => class_basename($exception),
-        ]);
+        ]));
     }
 }

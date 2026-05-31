@@ -2,6 +2,8 @@
 
 namespace App\Infrastructure\Messaging\RabbitMq;
 
+use App\Infrastructure\Observability\PaymentMetricsRecorder;
+use App\Support\PaymentStructuredLogger;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -11,6 +13,7 @@ class DlqRequeueService
     public function __construct(
         private readonly RabbitMqConfig $config,
         private readonly RabbitMqConnectionFactory $connectionFactory,
+        private readonly PaymentMetricsRecorder $metricsRecorder,
     ) {}
 
     /**
@@ -57,10 +60,12 @@ class DlqRequeueService
 
             [, $remaining] = $channel->queue_declare($this->config->dlq, true);
 
-            Log::info('dlq messages requeued', [
+            Log::info('dlq messages requeued', PaymentStructuredLogger::context('payment.dlq.requeued', [
                 'requeued' => $requeued,
                 'remaining' => $remaining,
-            ]);
+            ]));
+
+            $this->metricsRecorder->recordDlqRequeued($requeued);
 
             return [
                 'requeued' => $requeued,

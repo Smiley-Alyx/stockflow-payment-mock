@@ -27,7 +27,10 @@ class PaymentRetryRequeueHandlerTest extends TestCase
             );
         $channel->shouldReceive('basic_ack')->once()->with(5);
 
-        $handler = new PaymentRetryRequeueHandler($this->config(retryDelayMs: 0));
+        $handler = new PaymentRetryRequeueHandler(
+            $this->config(retryDelayMs: 0),
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
+        );
 
         $message = new AMQPMessage('{"payment_id":"pay_1"}', [
             'application_headers' => new AMQPTable([
@@ -46,7 +49,10 @@ class PaymentRetryRequeueHandlerTest extends TestCase
         $channel->shouldReceive('basic_nack')->once()->with(8, false, true);
         $channel->shouldNotReceive('basic_publish');
 
-        $handler = new PaymentRetryRequeueHandler($this->config(retryDelayMs: 5000));
+        $handler = new PaymentRetryRequeueHandler(
+            $this->config(retryDelayMs: 5000),
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
+        );
 
         $message = new AMQPMessage('{}', [
             'application_headers' => new AMQPTable([

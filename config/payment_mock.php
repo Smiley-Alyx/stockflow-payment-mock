@@ -17,6 +17,10 @@ return [
         'processing_delay_ms' => (int) env('PAYMENT_MOCK_PROCESSING_DELAY_MS', 2000),
     ],
 
+    'observability' => [
+        'metrics_enabled' => env('PAYMENT_MOCK_METRICS_ENABLED', true),
+    ],
+
     'rabbitmq' => [
         'host' => env('RABBITMQ_HOST', '127.0.0.1'),
         'port' => (int) env('RABBITMQ_PORT', 5672),

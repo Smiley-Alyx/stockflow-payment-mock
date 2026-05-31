@@ -146,6 +146,7 @@ class IdempotentPaymentEventPublisherTest extends TestCase
             new PublishedEventStore,
             $this->app->make(PaymentIdempotencyService::class),
             $this->app->make(\App\Domain\Payment\Services\Debug\ProviderDegradationSimulator::class),
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
 
         $publisher->publishAuthorizationResult($this->incoming(), $this->authorizationResult());
@@ -159,6 +160,7 @@ class IdempotentPaymentEventPublisherTest extends TestCase
             new PublishedEventStore,
             $this->app->make(PaymentIdempotencyService::class),
             $this->app->make(\App\Domain\Payment\Services\Debug\ProviderDegradationSimulator::class),
+            $this->app->make(\App\Infrastructure\Observability\PaymentMetricsRecorder::class),
         );
     }
 
