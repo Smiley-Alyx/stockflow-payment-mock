@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Payment\Services\Authorization\PaymentAuthorizationService;
+use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
+use App\Domain\Payment\Services\Sandbox\SandboxBalanceService;
 use App\Domain\Payment\Services\Sandbox\SandboxCardBehaviorEvaluator;
 use App\Domain\Payment\Services\Sandbox\SandboxCardCatalog;
 use App\Domain\Payment\Services\Sandbox\SandboxPaymentMethodResolver;
@@ -21,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SandboxPaymentMethodResolver::class);
         $this->app->singleton(SandboxCardBehaviorEvaluator::class);
         $this->app->singleton(SandboxTestCardTokenizer::class);
+        $this->app->singleton(SandboxBalanceService::class);
+        $this->app->singleton(PaymentIdempotencyService::class);
+        $this->app->singleton(PaymentAuthorizationService::class);
     }
 
     /**
