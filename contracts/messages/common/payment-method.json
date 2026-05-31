@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stockflow.local/contracts/messages/common/payment-method.json",
+  "title": "PaymentMethod",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "token"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["card"],
+      "description": "Sandbox payment method type."
+    },
+    "token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Sandbox card token. Never send raw PAN or CVV.",
+      "examples": ["tok_approved_visa"]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "message_id": "msg_ref_fail_01jxyzabc011",
+    "correlation_id": "cor_checkout_01jxyzabc004",
+    "causation_id": "msg_ref_req_01jxyzabc012",
+    "idempotency_key": "idem_ref_pay_demo_004",
+    "schema_version": "v1",
+    "occurred_at": "2026-05-31T11:05:00Z",
+    "producer": "stockflow-payment-mock"
+  },
+  "payload": {
+    "payment_id": "pay_demo_004",
+    "status": "failed",
+    "reason_code": "REFUND_FAILED",
+    "reason_message": "Refund amount exceeds captured amount"
+  }
+}

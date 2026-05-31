@@ -1,0 +1,263 @@
+asyncapi: '2.6.0'
+info:
+  title: Stockflow Payment Mock
+  version: 1.0.0
+  description: |
+    AsyncAPI contract for the external sandbox payment provider used by
+    `stockflow-market`.
+
+    The payment mock consumes authorization, capture, and refund requests from
+    the marketplace and publishes outcome events back to RabbitMQ.
+
+    **Security note:** payloads must use sandbox card tokens only. Never send
+    raw PAN, CVV, or other sensitive card data through these messages.
+
+  contact:
+    name: Stockflow Payment Mock
+  license:
+    name: MIT
+
+defaultContentType: application/json
+
+tags:
+  - name: payment
+    description: Authorization, capture, and refund lifecycle
+
+servers:
+  rabbitmq-local:
+    url: amqp://localhost:5672
+    protocol: amqp
+    description: Local RabbitMQ broker from docker-compose
+    bindings:
+      amqp:
+        virtualHost: /
+        exchange:
+          name: stockflow.payment
+          type: topic
+          durable: true
+
+channels:
+  payment.authorization.requested.v1:
+    description: Marketplace requests payment authorization from the provider mock.
+    subscribe:
+      operationId: onPaymentAuthorizationRequested
+      summary: Consume authorization request
+      message:
+        $ref: '#/components/messages/PaymentAuthorizationRequestedV1'
+      bindings:
+        amqp:
+          ack: true
+          bindingVersion: 0.3.0
+          queue:
+            name: stockflow.payment.requests
+            durable: true
+            exclusive: false
+            autoDelete: false
+
+  payment.authorization.approved.v1:
+    description: Provider mock publishes successful authorization.
+    publish:
+      operationId: publishPaymentAuthorizationApproved
+      summary: Publish authorization approved
+      message:
+        $ref: '#/components/messages/PaymentAuthorizationApprovedV1'
+
+  payment.authorization.declined.v1:
+    description: Provider mock publishes declined authorization.
+    publish:
+      operationId: publishPaymentAuthorizationDeclined
+      summary: Publish authorization declined
+      message:
+        $ref: '#/components/messages/PaymentAuthorizationDeclinedV1'
+
+  payment.capture.requested.v1:
+    description: Marketplace requests manual capture after authorization.
+    subscribe:
+      operationId: onPaymentCaptureRequested
+      summary: Consume capture request
+      message:
+        $ref: '#/components/messages/PaymentCaptureRequestedV1'
+
+  payment.capture.completed.v1:
+    description: Provider mock publishes successful capture.
+    publish:
+      operationId: publishPaymentCaptureCompleted
+      summary: Publish capture completed
+      message:
+        $ref: '#/components/messages/PaymentCaptureCompletedV1'
+
+  payment.capture.failed.v1:
+    description: Provider mock publishes failed capture.
+    publish:
+      operationId: publishPaymentCaptureFailed
+      summary: Publish capture failed
+      message:
+        $ref: '#/components/messages/PaymentCaptureFailedV1'
+
+  payment.refund.requested.v1:
+    description: Marketplace requests full or partial refund.
+    subscribe:
+      operationId: onPaymentRefundRequested
+      summary: Consume refund request
+      message:
+        $ref: '#/components/messages/PaymentRefundRequestedV1'
+
+  payment.refund.completed.v1:
+    description: Provider mock publishes successful refund.
+    publish:
+      operationId: publishPaymentRefundCompleted
+      summary: Publish refund completed
+      message:
+        $ref: '#/components/messages/PaymentRefundCompletedV1'
+
+  payment.refund.failed.v1:
+    description: Provider mock publishes failed refund.
+    publish:
+      operationId: publishPaymentRefundFailed
+      summary: Publish refund failed
+      message:
+        $ref: '#/components/messages/PaymentRefundFailedV1'
+
+components:
+  messages:
+    PaymentAuthorizationRequestedV1:
+      name: payment.authorization.requested.v1
+      title: Payment authorization requested
+      summary: Request provider authorization for a sandbox card payment
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.authorization.requested.v1.json'
+      examples:
+        - name: happyPathManualCapture
+          headers:
+            message_id: msg_auth_req_01jxyzabc001
+            correlation_id: cor_checkout_01jxyzabc001
+            causation_id: msg_checkout_submitted_01jxyzabc001
+            idempotency_key: idem_auth_pay_demo_001
+            schema_version: v1
+            occurred_at: '2026-05-31T10:15:00Z'
+            producer: stockflow-market
+          payload:
+            $ref: './examples/payment.authorization.requested.v1.json#/payload'
+
+    PaymentAuthorizationApprovedV1:
+      name: payment.authorization.approved.v1
+      title: Payment authorization approved
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.authorization.approved.v1.json'
+      examples:
+        - name: approved
+          headers:
+            message_id: msg_auth_appr_01jxyzabc002
+            correlation_id: cor_checkout_01jxyzabc001
+            causation_id: msg_auth_req_01jxyzabc001
+            idempotency_key: idem_auth_pay_demo_001
+            schema_version: v1
+            occurred_at: '2026-05-31T10:15:01Z'
+            producer: stockflow-payment-mock
+          payload:
+            payment_id: pay_demo_001
+            authorization_id: auth_demo_001
+            order_id: ord_demo_001
+            status: approved
+            amount:
+              value: 12990
+              currency: EUR
+            authorized_at: '2026-05-31T10:15:01Z'
+
+    PaymentAuthorizationDeclinedV1:
+      name: payment.authorization.declined.v1
+      title: Payment authorization declined
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.authorization.declined.v1.json'
+
+    PaymentCaptureRequestedV1:
+      name: payment.capture.requested.v1
+      title: Payment capture requested
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.capture.requested.v1.json'
+
+    PaymentCaptureCompletedV1:
+      name: payment.capture.completed.v1
+      title: Payment capture completed
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.capture.completed.v1.json'
+
+    PaymentCaptureFailedV1:
+      name: payment.capture.failed.v1
+      title: Payment capture failed
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.capture.failed.v1.json'
+
+    PaymentRefundRequestedV1:
+      name: payment.refund.requested.v1
+      title: Payment refund requested
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.refund.requested.v1.json'
+
+    PaymentRefundCompletedV1:
+      name: payment.refund.completed.v1
+      title: Payment refund completed
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.refund.completed.v1.json'
+
+    PaymentRefundFailedV1:
+      name: payment.refund.failed.v1
+      title: Payment refund failed
+      contentType: application/json
+      headers:
+        $ref: '#/components/schemas/MessageHeaders'
+      payload:
+        $ref: './messages/payment.refund.failed.v1.json'
+
+  schemas:
+    MessageHeaders:
+      $ref: './messages/common/message-headers.json'
+
+  parameters:
+    routingKey:
+      description: RabbitMQ routing key equal to the message name.
+      schema:
+        type: string
+
+x-rabbitmq:
+  exchange: stockflow.payment
+  deadLetterExchange: stockflow.payment.dlx
+  queues:
+    requests: stockflow.payment.requests
+    retry: stockflow.payment.requests.retry
+    dlq: stockflow.payment.requests.dlq
+  incomingRoutingKeys:
+    - payment.authorization.requested.v1
+    - payment.capture.requested.v1
+    - payment.refund.requested.v1
+  outgoingRoutingKeys:
+    - payment.authorization.approved.v1
+    - payment.authorization.declined.v1
+    - payment.capture.completed.v1
+    - payment.capture.failed.v1
+    - payment.refund.completed.v1
+    - payment.refund.failed.v1

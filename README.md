@@ -80,6 +80,15 @@ make docker-down
 | `POST` | `/debug/failure-mode` | Set provider failure simulation mode |
 | `POST` | `/debug/reset` | Reset demo data and failure mode |
 
+## Messaging contract
+
+AsyncAPI and JSON Schemas live in [`contracts/`](contracts/):
+
+- [`contracts/asyncapi.yaml`](contracts/asyncapi.yaml)
+- [`contracts/messages/`](contracts/messages/)
+- [`contracts/examples/`](contracts/examples/)
+- [`contracts/README.md`](contracts/README.md) — headers, correlation, idempotency
+
 ## Configuration
 
 | Environment variable | Default | Description |

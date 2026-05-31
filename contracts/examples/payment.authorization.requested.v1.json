@@ -1,0 +1,28 @@
+{
+  "headers": {
+    "message_id": "msg_auth_req_01jxyzabc001",
+    "correlation_id": "cor_checkout_01jxyzabc001",
+    "causation_id": "msg_checkout_submitted_01jxyzabc001",
+    "idempotency_key": "idem_auth_pay_demo_001",
+    "schema_version": "v1",
+    "occurred_at": "2026-05-31T10:15:00Z",
+    "producer": "stockflow-market"
+  },
+  "payload": {
+    "payment_id": "pay_demo_001",
+    "order_id": "ord_demo_001",
+    "customer_id": "cust_demo_001",
+    "amount": {
+      "value": 12990,
+      "currency": "EUR"
+    },
+    "payment_method": {
+      "type": "card",
+      "token": "tok_approved_visa"
+    },
+    "capture_mode": "manual",
+    "metadata": {
+      "checkout_id": "chk_demo_001"
+    }
+  }
+}

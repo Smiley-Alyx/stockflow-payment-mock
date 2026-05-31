@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stockflow.local/contracts/messages/payment.authorization.requested.v1.json",
+  "title": "PaymentAuthorizationRequestedV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payment_id",
+    "order_id",
+    "customer_id",
+    "amount",
+    "payment_method",
+    "capture_mode"
+  ],
+  "properties": {
+    "payment_id": {
+      "type": "string",
+      "pattern": "^pay_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "order_id": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "customer_id": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "amount": {
+      "$ref": "./common/money-amount.json"
+    },
+    "payment_method": {
+      "$ref": "./common/payment-method.json"
+    },
+    "capture_mode": {
+      "type": "string",
+      "enum": ["manual", "automatic"]
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

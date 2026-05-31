@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stockflow.local/contracts/messages/payment.capture.requested.v1.json",
+  "title": "PaymentCaptureRequestedV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["payment_id"],
+  "properties": {
+    "payment_id": {
+      "type": "string",
+      "pattern": "^pay_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "amount": {
+      "$ref": "./common/money-amount.json",
+      "description": "Optional partial capture amount. Defaults to authorized amount."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "headers": {
+    "message_id": "msg_cap_req_01jxyzabc005",
+    "correlation_id": "cor_checkout_01jxyzabc001",
+    "causation_id": "msg_order_fulfilled_01jxyzabc005",
+    "idempotency_key": "idem_cap_pay_demo_001",
+    "schema_version": "v1",
+    "occurred_at": "2026-05-31T10:20:00Z",
+    "producer": "stockflow-market"
+  },
+  "payload": {
+    "payment_id": "pay_demo_001",
+    "amount": {
+      "value": 12990,
+      "currency": "EUR"
+    },
+    "metadata": {
+      "shipment_id": "shp_demo_001"
+    }
+  }
+}

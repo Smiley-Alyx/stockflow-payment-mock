@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stockflow.local/contracts/messages/payment.authorization.declined.v1.json",
+  "title": "PaymentAuthorizationDeclinedV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payment_id",
+    "order_id",
+    "status",
+    "reason_code",
+    "reason_message"
+  ],
+  "properties": {
+    "payment_id": {
+      "type": "string",
+      "pattern": "^pay_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "order_id": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "status": {
+      "type": "string",
+      "const": "declined"
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "INSUFFICIENT_FUNDS",
+        "CARD_EXPIRED",
+        "CARD_BLOCKED",
+        "INVALID_CARD_TOKEN",
+        "PROVIDER_UNAVAILABLE",
+        "PROCESSING_TIMEOUT",
+        "DECLINED"
+      ]
+    },
+    "reason_message": {
+      "type": "string",
+      "maxLength": 255
+    }
+  }
+}

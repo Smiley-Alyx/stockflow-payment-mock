@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stockflow.local/contracts/messages/payment.refund.completed.v1.json",
+  "title": "PaymentRefundCompletedV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payment_id",
+    "refund_id",
+    "capture_id",
+    "status",
+    "amount",
+    "refunded_at"
+  ],
+  "properties": {
+    "payment_id": {
+      "type": "string",
+      "pattern": "^pay_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "refund_id": {
+      "type": "string",
+      "pattern": "^ref_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "capture_id": {
+      "type": "string",
+      "pattern": "^cap_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "status": {
+      "type": "string",
+      "const": "completed"
+    },
+    "amount": {
+      "$ref": "./common/money-amount.json"
+    },
+    "refunded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

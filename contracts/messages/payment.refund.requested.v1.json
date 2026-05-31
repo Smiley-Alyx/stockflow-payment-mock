@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stockflow.local/contracts/messages/payment.refund.requested.v1.json",
+  "title": "PaymentRefundRequestedV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["payment_id"],
+  "properties": {
+    "payment_id": {
+      "type": "string",
+      "pattern": "^pay_[a-z0-9_]+$",
+      "maxLength": 64
+    },
+    "amount": {
+      "$ref": "./common/money-amount.json",
+      "description": "Optional partial refund amount. Defaults to remaining captured amount."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

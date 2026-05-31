@@ -1,0 +1,22 @@
+{
+  "headers": {
+    "message_id": "msg_cap_done_01jxyzabc006",
+    "correlation_id": "cor_checkout_01jxyzabc001",
+    "causation_id": "msg_cap_req_01jxyzabc005",
+    "idempotency_key": "idem_cap_pay_demo_001",
+    "schema_version": "v1",
+    "occurred_at": "2026-05-31T10:20:01Z",
+    "producer": "stockflow-payment-mock"
+  },
+  "payload": {
+    "payment_id": "pay_demo_001",
+    "capture_id": "cap_demo_001",
+    "authorization_id": "auth_demo_001",
+    "status": "completed",
+    "amount": {
+      "value": 12990,
+      "currency": "EUR"
+    },
+    "captured_at": "2026-05-31T10:20:01Z"
+  }
+}

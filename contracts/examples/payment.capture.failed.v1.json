@@ -1,0 +1,18 @@
+{
+  "headers": {
+    "message_id": "msg_cap_fail_01jxyzabc007",
+    "correlation_id": "cor_checkout_01jxyzabc003",
+    "causation_id": "msg_cap_req_01jxyzabc008",
+    "idempotency_key": "idem_cap_pay_demo_003",
+    "schema_version": "v1",
+    "occurred_at": "2026-05-31T10:21:00Z",
+    "producer": "stockflow-payment-mock"
+  },
+  "payload": {
+    "payment_id": "pay_demo_003",
+    "capture_id": "cap_demo_003",
+    "status": "failed",
+    "reason_code": "CAPTURE_FAILED",
+    "reason_message": "Sandbox capture failed"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "headers": {
+    "message_id": "msg_auth_decl_01jxyzabc003",
+    "correlation_id": "cor_checkout_01jxyzabc002",
+    "causation_id": "msg_auth_req_01jxyzabc004",
+    "idempotency_key": "idem_auth_pay_demo_002",
+    "schema_version": "v1",
+    "occurred_at": "2026-05-31T10:16:00Z",
+    "producer": "stockflow-payment-mock"
+  },
+  "payload": {
+    "payment_id": "pay_demo_002",
+    "order_id": "ord_demo_002",
+    "status": "declined",
+    "reason_code": "INSUFFICIENT_FUNDS",
+    "reason_message": "Sandbox card has insufficient funds"
+  }
+}
