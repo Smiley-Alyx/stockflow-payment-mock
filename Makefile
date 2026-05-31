@@ -2,6 +2,7 @@
 
 install:
 	composer install
+	composer install-git-hooks
 
 migrate:
 	php artisan migrate

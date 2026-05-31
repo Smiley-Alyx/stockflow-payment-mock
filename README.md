@@ -18,6 +18,28 @@ make serve
 
 The HTTP server listens on `http://localhost:8081`.
 
+## Git hooks
+
+Install project hooks and the commit message template:
+
+```bash
+composer install-git-hooks
+```
+
+Commit messages must follow conventional commits as `type(scope): subject`, where
+`scope` is required and written in kebab-case.
+
+Examples:
+
+```text
+feat(authorization): add sandbox card authorization service
+refactor(idempotency): extract duplicate request handling
+test(rabbitmq): cover authorization happy path over amqp
+docs(payment-flow): describe capture and refund sequence
+infra(observability): add prometheus metrics endpoint
+chore(bootstrap): initialize laravel payment mock service
+```
+
 ## Docker Compose
 
 Start the service with a local RabbitMQ instance:

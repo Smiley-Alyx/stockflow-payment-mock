@@ -1,0 +1,23 @@
+# feat(scope): short imperative subject
+
+# Формат обязателен:
+#   type(scope): subject
+#
+# Примеры:
+#   feat(authorization): add sandbox card authorization service
+#   refactor(idempotency): extract duplicate request handling
+#   test(rabbitmq): cover authorization happy path over amqp
+#   docs(payment-flow): describe capture and refund sequence
+#   infra(observability): add prometheus metrics endpoint
+#   chore(bootstrap): initialize laravel payment mock service
+#
+# Разрешенные type:
+#   feat, fix, refactor, perf, test, docs, infra, build, ci, chore, revert
+#
+# Scope обязателен, kebab-case.
+# Subject начинается с маленькой буквы или цифры, без точки в конце.
+#
+# Приоритет инженерной зрелости:
+#   idempotent consumers, retry and DLQ policy, correlation headers,
+#   sandbox tokenization, failure mode simulation, metrics and tracing,
+#   AsyncAPI contracts, graceful shutdown, benchmark evidence.
