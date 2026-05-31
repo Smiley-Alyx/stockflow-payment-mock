@@ -28,6 +28,14 @@ class CaptureRequestedHandler
 
         $result = $this->captureService->capture($request);
 
+        if ($result->idempotentReplay) {
+            Log::info('payment capture idempotent replay', [
+                'correlation_id' => $message->headers->correlationId,
+                'payment_id' => $request->paymentId,
+                'idempotency_key' => $request->idempotencyKey,
+            ]);
+        }
+
         $this->eventPublisher->publishCaptureResult($message, $result);
     }
 }

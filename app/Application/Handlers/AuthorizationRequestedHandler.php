@@ -28,6 +28,14 @@ class AuthorizationRequestedHandler
 
         $result = $this->authorizationService->authorize($request);
 
+        if ($result->idempotentReplay) {
+            Log::info('payment authorization idempotent replay', [
+                'correlation_id' => $message->headers->correlationId,
+                'payment_id' => $request->paymentId,
+                'idempotency_key' => $request->idempotencyKey,
+            ]);
+        }
+
         $this->eventPublisher->publishAuthorizationResult($message, $result);
     }
 }

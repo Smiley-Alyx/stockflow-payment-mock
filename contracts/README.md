@@ -107,6 +107,9 @@ Retry behavior:
   logical result.
 - Sandbox balance must not be debited or refunded twice.
 - Duplicate requests must not create duplicate attempts with conflicting outcomes.
+- Outbound result events are stored by `(operation, payment_id, idempotency_key)`.
+  Retries republish the original event with the same `message_id` and payload so
+  the marketplace can safely reconcile duplicate deliveries.
 
 ## Sandbox safety
 

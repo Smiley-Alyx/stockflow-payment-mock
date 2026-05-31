@@ -28,6 +28,14 @@ class RefundRequestedHandler
 
         $result = $this->refundService->refund($request);
 
+        if ($result->idempotentReplay) {
+            Log::info('payment refund idempotent replay', [
+                'correlation_id' => $message->headers->correlationId,
+                'payment_id' => $request->paymentId,
+                'idempotency_key' => $request->idempotencyKey,
+            ]);
+        }
+
         $this->eventPublisher->publishRefundResult($message, $result);
     }
 }

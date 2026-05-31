@@ -126,6 +126,9 @@ set `causation_id` to the request `message_id`, and assign a new `message_id` pe
 
 Set `PAYMENT_MOCK_PUBLISH_EVENTS=false` to disable AMQP publishing (tests use the null publisher).
 
+Duplicate RabbitMQ requests with the same `idempotency_key` replay the stored domain
+result and republish the original outbound event (`message_id` and payload unchanged).
+
 ## Configuration
 
 | Environment variable | Default | Description |
