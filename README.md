@@ -190,6 +190,17 @@ Prometheus metrics are exposed at `GET /metrics` when `PAYMENT_MOCK_METRICS_ENAB
 
 Structured logs include `service` and `event` fields on payment lifecycle log lines.
 
+## Integration tests
+
+RabbitMQ integration tests live in `tests/Integration` and require a running broker.
+
+```bash
+make docker-up
+make test-integration
+```
+
+They connect to `127.0.0.1:5673` by default (docker-compose port mapping) and are skipped automatically when RabbitMQ is unavailable, so `make test` stays green in CI without a broker.
+
 ## Configuration
 
 | Environment variable | Default | Description |

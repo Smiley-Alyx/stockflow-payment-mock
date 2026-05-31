@@ -22,6 +22,7 @@ use App\Infrastructure\Messaging\RabbitMq\MessageHeaderValidator;
 use App\Infrastructure\Messaging\RabbitMq\MessageRetryPolicy;
 use App\Infrastructure\Messaging\RabbitMq\PaymentDlqPublisher;
 use App\Infrastructure\Messaging\RabbitMq\PaymentRequestFailureHandler;
+use App\Infrastructure\Messaging\RabbitMq\PaymentRequestProcessor;
 use App\Infrastructure\Messaging\RabbitMq\PaymentRequestRetryPublisher;
 use App\Infrastructure\Messaging\RabbitMq\PaymentRetryRequeueHandler;
 use App\Infrastructure\Messaging\RabbitMq\DlqRequeueService;
@@ -71,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentRequestRetryPublisher::class);
         $this->app->singleton(PaymentDlqPublisher::class);
         $this->app->singleton(PaymentRequestFailureHandler::class);
+        $this->app->singleton(PaymentRequestProcessor::class);
         $this->app->singleton(PaymentRetryRequeueHandler::class);
         $this->app->singleton(DlqRequeueService::class);
         $this->app->singleton(PaymentMessageMapper::class);

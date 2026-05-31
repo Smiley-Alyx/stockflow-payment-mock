@@ -2,12 +2,9 @@
 
 namespace App\Infrastructure\Messaging\RabbitMq;
 
-use App\Application\Handlers\PaymentMessageDispatcher;
-use App\Infrastructure\Messaging\RabbitMq\Exceptions\InvalidMessageException;
 use Illuminate\Support\Facades\Log;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
-use Throwable;
 
 class PaymentRequestConsumer
 {
@@ -17,9 +14,7 @@ class PaymentRequestConsumer
         private readonly RabbitMqConfig $config,
         private readonly RabbitMqConnectionFactory $connectionFactory,
         private readonly RabbitMqTopologyManager $topologyManager,
-        private readonly MessageHeaderValidator $headerValidator,
-        private readonly PaymentMessageDispatcher $dispatcher,
-        private readonly PaymentRequestFailureHandler $failureHandler,
+        private readonly PaymentRequestProcessor $requestProcessor,
         private readonly PaymentRetryRequeueHandler $retryRequeueHandler,
     ) {}
 
@@ -44,7 +39,7 @@ class PaymentRequestConsumer
                 no_ack: false,
                 exclusive: false,
                 nowait: false,
-                callback: fn (AMQPMessage $message): void => $this->handleRequestMessage($channel, $message),
+                callback: fn (AMQPMessage $message): void => $this->requestProcessor->process($channel, $message),
             );
 
             $channel->basic_consume(
@@ -80,28 +75,6 @@ class PaymentRequestConsumer
     public function requestStop(): void
     {
         $this->shouldStop = true;
-    }
-
-    private function handleRequestMessage(AMQPChannel $channel, AMQPMessage $message): void
-    {
-        try {
-            $incoming = IncomingMessage::fromAmqpMessage($message, $this->headerValidator);
-
-            Log::withContext([
-                'correlation_id' => $incoming->headers->correlationId,
-                'message_id' => $incoming->headers->messageId,
-            ]);
-
-            $this->dispatcher->dispatch($incoming);
-
-            $channel->basic_ack($message->getDeliveryTag());
-        } catch (InvalidMessageException $exception) {
-            $this->failureHandler->handleInvalidMessage($channel, $message, $exception);
-        } catch (Throwable $exception) {
-            $this->failureHandler->handleProcessingFailure($channel, $message, $exception);
-        } finally {
-            Log::withoutContext();
-        }
     }
 
     private function registerSignalHandlers(): void

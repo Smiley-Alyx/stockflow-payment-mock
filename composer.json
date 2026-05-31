@@ -48,6 +48,10 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
+        "test:integration": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php artisan test --configuration=phpunit.integration.xml"
+        ],
         "install-git-hooks": [
             "@php scripts/install-git-hooks.php"
         ],

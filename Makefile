@@ -1,4 +1,4 @@
-.PHONY: consume docker-down docker-up install migrate serve test
+.PHONY: consume docker-down docker-up install migrate serve test test-integration
 
 install:
 	composer install
@@ -19,6 +19,9 @@ requeue-dlq:
 
 test:
 	php artisan test
+
+test-integration:
+	php artisan test --configuration=phpunit.integration.xml
 
 docker-up:
 	docker compose up --build -d
