@@ -1,0 +1,44 @@
+services:
+  payment-mock:
+    build:
+      context: .
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8081
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/database/database.sqlite
+      PAYMENT_MOCK_SERVICE_NAME: stockflow-payment-mock
+      PAYMENT_MOCK_HTTP_PORT: 8080
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: stockflow
+      RABBITMQ_PASSWORD: stockflow
+      RABBITMQ_VHOST: /
+    ports:
+      - "8081:8080"
+    volumes:
+      - payment-mock-data:/app/database
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: stockflow
+      RABBITMQ_DEFAULT_PASS: stockflow
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  payment-mock-data:
+  rabbitmq-data:
