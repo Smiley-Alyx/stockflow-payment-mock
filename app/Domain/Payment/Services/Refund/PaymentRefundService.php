@@ -15,6 +15,8 @@ use App\Domain\Payment\Models\Capture;
 use App\Domain\Payment\Models\Payment;
 use App\Domain\Payment\Models\PaymentAttempt;
 use App\Domain\Payment\Models\Refund;
+use App\Domain\Payment\Services\Debug\PaymentOperation;
+use App\Domain\Payment\Services\Debug\ProviderDegradationSimulator;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
 use App\Domain\Payment\Services\PaymentLedger;
 use App\Domain\Payment\Services\Sandbox\SandboxBalanceService;
@@ -31,6 +33,7 @@ class PaymentRefundService
         private readonly SandboxCardBehaviorEvaluator $behaviorEvaluator,
         private readonly SandboxBalanceService $balanceService,
         private readonly PaymentIdempotencyService $idempotencyService,
+        private readonly ProviderDegradationSimulator $degradationSimulator,
     ) {}
 
     public function refund(RefundRequest $request): RefundResult
@@ -163,6 +166,22 @@ class PaymentRefundService
         int $refundAmount,
         string $refundCurrency,
     ): RefundResult {
+        $this->degradationSimulator->beforeProcessing(PaymentOperation::Refund);
+
+        $simulatedFailure = $this->degradationSimulator->refundDeclineReason();
+
+        if ($simulatedFailure !== null) {
+            return $this->failRefund(
+                $payment,
+                $attempt,
+                $capture,
+                $refundAmount,
+                $refundCurrency,
+                $simulatedFailure,
+                $simulatedFailure->message(),
+            );
+        }
+
         $card = $this->paymentMethodResolver->resolve($payment->payment_method_token);
 
         $failureReason = $this->behaviorEvaluator->refundDeclineReason($card);

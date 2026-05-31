@@ -153,7 +153,27 @@ Debug API (when `PAYMENT_MOCK_DEBUG_ENABLED=true`):
 ```text
 GET  /debug/dlq
 POST /debug/dlq/requeue
+GET  /debug/failure-mode
+POST /debug/failure-mode
+POST /debug/reset
 ```
+
+### Failure modes
+
+Set via `POST /debug/failure-mode` (`{"mode":"always_decline"}`):
+
+| Mode | Effect |
+| --- | --- |
+| `normal` | Sandbox card tokens drive behavior |
+| `always_decline` | Decline auth/capture/refund regardless of card |
+| `random_decline` | 50% decline per operation |
+| `processing_delay` | Sleep `PAYMENT_MOCK_PROCESSING_DELAY_MS` before processing |
+| `provider_unavailable` | Throw retryable error (RabbitMQ retry/DLQ path) |
+| `timeout` | Throw retryable timeout error |
+| `capture_failure` | Force capture failure |
+| `refund_failure` | Force refund failure |
+| `duplicate_response` | Publish the same outbound event twice |
+| `publish_failure` | Throw retryable error while publishing result events |
 
 ## Configuration
 
@@ -170,6 +190,7 @@ POST /debug/dlq/requeue
 | `PAYMENT_MOCK_PUBLISH_EVENTS` | `true` | Publish payment result events to RabbitMQ |
 | `RABBITMQ_MAX_RETRY_ATTEMPTS` | `3` | Retry count before a request is moved to DLQ |
 | `RABBITMQ_RETRY_DELAY_MS` | `5000` | Delay before a retried request is requeued |
+| `PAYMENT_MOCK_PROCESSING_DELAY_MS` | `2000` | Artificial latency for `processing_delay` mode |
 
 ## Portfolio scope
 

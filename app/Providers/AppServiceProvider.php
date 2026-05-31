@@ -7,6 +7,7 @@ use App\Domain\Payment\Services\Authorization\PaymentAuthorizationService;
 use App\Domain\Payment\Services\Capture\PaymentCaptureService;
 use App\Domain\Payment\Services\Debug\DemoResetService;
 use App\Domain\Payment\Services\Debug\FailureModeManager;
+use App\Domain\Payment\Services\Debug\ProviderDegradationSimulator;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
 use App\Domain\Payment\Services\PaymentLedger;
 use App\Domain\Payment\Services\Refund\PaymentRefundService;
@@ -54,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentCaptureService::class);
         $this->app->singleton(PaymentRefundService::class);
         $this->app->singleton(FailureModeManager::class);
+        $this->app->singleton(ProviderDegradationSimulator::class);
         $this->app->singleton(DemoResetService::class);
 
         $this->app->singleton(RabbitMqConfig::class, fn (): RabbitMqConfig => RabbitMqConfig::fromConfig());

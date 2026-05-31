@@ -130,6 +130,15 @@ Policy:
 - DLQ: `stockflow.payment.requests.dlq`
 - Manual requeue: `php artisan payment-mock:requeue-dlq` or `POST /debug/dlq/requeue`
 
+## Provider degradation (debug)
+
+Failure modes are configured through `POST /debug/failure-mode` and apply globally until reset.
+
+Transient modes (`provider_unavailable`, `timeout`, `publish_failure`) surface as retryable
+processing errors in the RabbitMQ consumer. Decline modes (`always_decline`, `capture_failure`,
+`refund_failure`, `random_decline`) override sandbox card behavior for demo scenarios.
+`duplicate_response` publishes the same outbound event twice for consumer deduplication testing.
+
 ## Sandbox safety
 
 - Use predefined tokens such as `tok_approved_visa`.

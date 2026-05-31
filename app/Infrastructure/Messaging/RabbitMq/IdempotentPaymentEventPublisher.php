@@ -7,6 +7,7 @@ use App\Domain\Payment\DTO\AuthorizationResult;
 use App\Domain\Payment\DTO\CaptureResult;
 use App\Domain\Payment\DTO\RefundResult;
 use App\Domain\Payment\Models\PublishedEventRecord;
+use App\Domain\Payment\Services\Debug\ProviderDegradationSimulator;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
 use App\Infrastructure\Messaging\RabbitMq\Contracts\PaymentEventPublisher;
 use App\Infrastructure\Messaging\RabbitMq\Exceptions\PublishedEventConflictException;
@@ -19,6 +20,7 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
         private readonly RabbitMqMessagePublisher $messagePublisher,
         private readonly PublishedEventStore $publishedEventStore,
         private readonly PaymentIdempotencyService $idempotencyService,
+        private readonly ProviderDegradationSimulator $degradationSimulator,
     ) {}
 
     public function publishAuthorizationResult(IncomingMessage $incoming, AuthorizationResult $result): void
@@ -79,7 +81,7 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
         }
 
         $event = $eventFactory();
-        $this->messagePublisher->publish($event);
+        $this->publishEvent($event, false);
 
         $stored = $this->publishedEventStore->store(
             $operation,
@@ -92,20 +94,20 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
         if ($stored->response_fingerprint !== $responseFingerprint) {
             $this->assertMatchingFingerprint($stored, $responseFingerprint, $operation, $paymentId, $idempotencyKey);
         }
-
-        Log::info('payment event published', [
-            'routing_key' => $event->routingKey,
-            'correlation_id' => $event->headers->correlationId,
-            'causation_id' => $event->headers->causationId,
-            'message_id' => $event->headers->messageId,
-            'idempotency_key' => $event->headers->idempotencyKey,
-            'idempotent_event_replay' => false,
-        ]);
     }
 
     private function publishStoredEvent(PublishedEventRecord $record, bool $idempotentReplay): void
     {
         $event = $this->publishedEventStore->toPublishedEvent($record);
+        $this->publishEvent($event, true, $idempotentReplay);
+    }
+
+    private function publishEvent(
+        PublishedPaymentEvent $event,
+        bool $storedReplay,
+        bool $domainIdempotentReplay = false,
+    ): void {
+        $this->degradationSimulator->assertPublishAllowed();
         $this->messagePublisher->publish($event);
 
         Log::info('payment event published', [
@@ -114,9 +116,19 @@ class IdempotentPaymentEventPublisher implements PaymentEventPublisher
             'causation_id' => $event->headers->causationId,
             'message_id' => $event->headers->messageId,
             'idempotency_key' => $event->headers->idempotencyKey,
-            'idempotent_event_replay' => true,
-            'domain_idempotent_replay' => $idempotentReplay,
+            'idempotent_event_replay' => $storedReplay,
+            'domain_idempotent_replay' => $domainIdempotentReplay,
         ]);
+
+        if (! $storedReplay && $this->degradationSimulator->shouldDuplicatePublishedResponse()) {
+            $this->messagePublisher->publish($event);
+
+            Log::info('payment event duplicate published', [
+                'routing_key' => $event->routingKey,
+                'message_id' => $event->headers->messageId,
+                'idempotency_key' => $event->headers->idempotencyKey,
+            ]);
+        }
     }
 
     private function assertMatchingFingerprint(

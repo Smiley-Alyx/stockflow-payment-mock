@@ -14,6 +14,8 @@ use App\Domain\Payment\Exceptions\InvalidSandboxCardTokenException;
 use App\Domain\Payment\Models\Authorization;
 use App\Domain\Payment\Models\Payment;
 use App\Domain\Payment\Models\PaymentAttempt;
+use App\Domain\Payment\Services\Debug\PaymentOperation;
+use App\Domain\Payment\Services\Debug\ProviderDegradationSimulator;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
 use App\Domain\Payment\Services\Sandbox\SandboxBalanceService;
 use App\Domain\Payment\Services\Sandbox\SandboxCardBehaviorEvaluator;
@@ -28,6 +30,7 @@ class PaymentAuthorizationService
         private readonly SandboxCardBehaviorEvaluator $behaviorEvaluator,
         private readonly SandboxBalanceService $balanceService,
         private readonly PaymentIdempotencyService $idempotencyService,
+        private readonly ProviderDegradationSimulator $degradationSimulator,
     ) {}
 
     public function authorize(AuthorizationRequest $request): AuthorizationResult
@@ -103,6 +106,14 @@ class PaymentAuthorizationService
         PaymentAttempt $attempt,
         AuthorizationRequest $request,
     ): AuthorizationResult {
+        $this->degradationSimulator->beforeProcessing(PaymentOperation::Authorization);
+
+        $simulatedDecline = $this->degradationSimulator->authorizationDeclineReason($request->randomRoll);
+
+        if ($simulatedDecline !== null) {
+            return $this->decline($payment, $attempt, $request, $simulatedDecline);
+        }
+
         try {
             $card = $this->paymentMethodResolver->resolve($request->paymentMethodToken);
         } catch (InvalidSandboxCardTokenException) {

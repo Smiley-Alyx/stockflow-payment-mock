@@ -13,6 +13,10 @@ return [
         'enabled' => env('PAYMENT_MOCK_DEBUG_ENABLED', env('APP_DEBUG', false)),
     ],
 
+    'degradation' => [
+        'processing_delay_ms' => (int) env('PAYMENT_MOCK_PROCESSING_DELAY_MS', 2000),
+    ],
+
     'rabbitmq' => [
         'host' => env('RABBITMQ_HOST', '127.0.0.1'),
         'port' => (int) env('RABBITMQ_PORT', 5672),

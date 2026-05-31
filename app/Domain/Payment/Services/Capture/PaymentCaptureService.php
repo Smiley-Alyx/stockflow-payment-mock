@@ -15,6 +15,8 @@ use App\Domain\Payment\Models\Capture;
 use App\Domain\Payment\Models\IdempotencyRecord;
 use App\Domain\Payment\Models\Payment;
 use App\Domain\Payment\Models\PaymentAttempt;
+use App\Domain\Payment\Services\Debug\PaymentOperation;
+use App\Domain\Payment\Services\Debug\ProviderDegradationSimulator;
 use App\Domain\Payment\Services\Idempotency\PaymentIdempotencyService;
 use App\Domain\Payment\Services\PaymentLedger;
 use App\Domain\Payment\Services\Sandbox\SandboxBalanceService;
@@ -31,6 +33,7 @@ class PaymentCaptureService
         private readonly SandboxCardBehaviorEvaluator $behaviorEvaluator,
         private readonly SandboxBalanceService $balanceService,
         private readonly PaymentIdempotencyService $idempotencyService,
+        private readonly ProviderDegradationSimulator $degradationSimulator,
     ) {}
 
     public function capture(CaptureRequest $request): CaptureResult
@@ -145,6 +148,21 @@ class PaymentCaptureService
         int $captureAmount,
         string $captureCurrency,
     ): CaptureResult {
+        $this->degradationSimulator->beforeProcessing(PaymentOperation::Capture);
+
+        $simulatedFailure = $this->degradationSimulator->captureDeclineReason();
+
+        if ($simulatedFailure !== null) {
+            return $this->failCapture(
+                $payment,
+                $attempt,
+                $authorization,
+                $captureAmount,
+                $captureCurrency,
+                $simulatedFailure,
+            );
+        }
+
         $card = $this->paymentMethodResolver->resolve($payment->payment_method_token);
 
         $failureReason = $this->behaviorEvaluator->captureDeclineReason($card);

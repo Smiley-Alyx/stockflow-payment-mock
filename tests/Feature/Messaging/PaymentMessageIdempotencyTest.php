@@ -51,6 +51,7 @@ class PaymentMessageIdempotencyTest extends TestCase
             $this->recordingPublisher,
             new PublishedEventStore,
             $this->app->make(PaymentIdempotencyService::class),
+            $this->app->make(\App\Domain\Payment\Services\Debug\ProviderDegradationSimulator::class),
         );
 
         $mapper = new PaymentMessageMapper;

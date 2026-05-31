@@ -110,6 +110,22 @@ class IdempotentPaymentEventPublisherTest extends TestCase
         ));
     }
 
+    public function test_duplicate_response_mode_publishes_event_twice(): void
+    {
+        Carbon::setTestNow('2026-05-31T10:15:01Z');
+
+        $this->app->make(\App\Domain\Payment\Services\Debug\FailureModeManager::class)
+            ->set(\App\Domain\Payment\Enums\FailureMode::DuplicateResponse);
+
+        $recording = new RecordingRabbitMqMessagePublisher;
+        $publisher = $this->publisher($recording);
+
+        $publisher->publishAuthorizationResult($this->incoming(), $this->authorizationResult());
+
+        $this->assertCount(2, $recording->published);
+        $this->assertSame($recording->published[0]->headers->messageId, $recording->published[1]->headers->messageId);
+    }
+
     public function test_publishes_authorization_result_event(): void
     {
         Carbon::setTestNow('2026-05-31T10:15:01Z');
@@ -129,6 +145,7 @@ class IdempotentPaymentEventPublisherTest extends TestCase
             $messagePublisher,
             new PublishedEventStore,
             $this->app->make(PaymentIdempotencyService::class),
+            $this->app->make(\App\Domain\Payment\Services\Debug\ProviderDegradationSimulator::class),
         );
 
         $publisher->publishAuthorizationResult($this->incoming(), $this->authorizationResult());
@@ -141,6 +158,7 @@ class IdempotentPaymentEventPublisherTest extends TestCase
             $recording,
             new PublishedEventStore,
             $this->app->make(PaymentIdempotencyService::class),
+            $this->app->make(\App\Domain\Payment\Services\Debug\ProviderDegradationSimulator::class),
         );
     }
 
