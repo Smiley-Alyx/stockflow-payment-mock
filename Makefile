@@ -21,7 +21,7 @@ test:
 	php artisan test
 
 test-integration:
-	php artisan test --configuration=phpunit.integration.xml
+	RABBITMQ_PORT=5673 php artisan test --configuration=phpunit.integration.xml
 
 docker-up:
 	docker compose up --build -d

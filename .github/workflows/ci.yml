@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sockets
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          composer-options: '--no-interaction --prefer-dist --optimize-autoloader'
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Run unit and feature tests
+        run: composer test
+
+  integration:
+    name: RabbitMQ integration
+    runs-on: ubuntu-latest
+    needs: tests
+
+    services:
+      rabbitmq:
+        image: rabbitmq:4.1-alpine
+        ports:
+          - 5672:5672
+        env:
+          RABBITMQ_DEFAULT_USER: stockflow
+          RABBITMQ_DEFAULT_PASS: stockflow
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      RABBITMQ_HOST: 127.0.0.1
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: stockflow
+      RABBITMQ_PASSWORD: stockflow
+      RABBITMQ_VHOST: /
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sockets
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          composer-options: '--no-interaction --prefer-dist --optimize-autoloader'
+
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Run RabbitMQ integration tests
+        run: composer test:integration

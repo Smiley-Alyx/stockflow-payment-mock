@@ -199,7 +199,26 @@ make docker-up
 make test-integration
 ```
 
-They connect to `127.0.0.1:5673` by default (docker-compose port mapping) and are skipped automatically when RabbitMQ is unavailable, so `make test` stays green in CI without a broker.
+They connect to `127.0.0.1:5673` when run locally via `make test-integration` (docker-compose maps RabbitMQ to host port 5673). The job fails fast if the broker is not running.
+
+## CI
+
+GitHub Actions runs on every push and pull request:
+
+| Job | Command | Notes |
+| --- | --- | --- |
+| `PHPUnit` | `composer test` | Unit and feature tests (131+) |
+| `RabbitMQ integration` | `composer test:integration` | End-to-end AMQP flow with a RabbitMQ service container |
+
+Local equivalents:
+
+```bash
+make test
+make docker-up
+make test-integration
+```
+
+Workflow file: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ## Configuration
 

@@ -29,7 +29,6 @@
         <env name="PAYMENT_MOCK_PUBLISH_EVENTS" value="true"/>
         <env name="PAYMENT_MOCK_METRICS_ENABLED" value="true"/>
         <env name="RABBITMQ_HOST" value="127.0.0.1"/>
-        <env name="RABBITMQ_PORT" value="5673"/>
         <env name="RABBITMQ_USER" value="stockflow"/>
         <env name="RABBITMQ_PASSWORD" value="stockflow"/>
         <env name="RABBITMQ_VHOST" value="/"/>
