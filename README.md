@@ -4,9 +4,38 @@
 provider integration for the `stockflow-market` case study. It is **not** a real
 payment gateway: all card data is test-only and tokenized.
 
-The service is built with PHP 8.3 and Laravel. It will communicate with the
-marketplace through RabbitMQ and AsyncAPI contracts, and expose an HTTP API for
+The service is built with PHP 8.3 and Laravel. It communicates with the
+marketplace through RabbitMQ and AsyncAPI contracts, and exposes an HTTP API for
 sandbox card simulation, health checks, and local demo tooling.
+
+## StockFlow ecosystem
+
+Part of the StockFlow ecosystem:
+
+- [stockflow-market](https://github.com/Smiley-Alyx/stockflow-market) — marketplace backend case study
+- [stockflow-erp-mock](https://github.com/Smiley-Alyx/stockflow-erp-mock) — external ERP / inventory integration mock
+- [stockflow-payment-mock](https://github.com/Smiley-Alyx/stockflow-payment-mock) — external payment provider mock (this repository)
+- [stockflow-delivery-mock](https://github.com/Smiley-Alyx/stockflow-delivery-mock) — external delivery provider mock
+
+`stockflow-market` orchestrates checkout and order fulfillment. Each external mock
+implements one provider boundary over RabbitMQ with AsyncAPI contracts, shared
+header conventions (`correlation_id`, `idempotency_key`, `causation_id`), and
+retry/DLQ handling:
+
+| Service | Exchange | Responsibility |
+| --- | --- | --- |
+| [stockflow-erp-mock](https://github.com/Smiley-Alyx/stockflow-erp-mock) | `stockflow.inventory` | Reserve and release stock in the external ERP sandbox |
+| **stockflow-payment-mock** (this repo) | `stockflow.payment` | Authorize, capture, and refund card payments |
+| [stockflow-delivery-mock](https://github.com/Smiley-Alyx/stockflow-delivery-mock) | `stockflow.delivery` | Create shipments and publish tracking status events |
+
+A typical checkout in the case study chains these boundaries: the marketplace
+reserves inventory, requests payment authorization (and later capture), then
+requests shipment creation once the order is paid. The same `correlation_id`
+ties messages across all three integrations so the market can reconstruct the
+full order timeline.
+
+See [`docs/architecture.md`](docs/architecture.md#stockflow-ecosystem) for the
+end-to-end diagram and links to sibling repositories.
 
 ## Local run
 
@@ -240,7 +269,9 @@ Workflow file: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ## Portfolio scope
 
-This repository demonstrates:
+This repository is part of the [StockFlow ecosystem](#stockflow-ecosystem): a
+highload-oriented marketplace backend case study with external service mocks.
+It demonstrates:
 
 - authorization / capture / refund lifecycle over RabbitMQ
 - sandbox card token behavior and failure simulation
@@ -248,4 +279,9 @@ This repository demonstrates:
 - Prometheus metrics and structured observability
 - AsyncAPI contracts and integration tests
 
-See `docs/` (upcoming steps) for architecture notes and demo scenarios.
+See [`docs/`](docs/) for architecture notes and demo scenarios:
+
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/payment-flow.md`](docs/payment-flow.md)
+- [`docs/failure-modes.md`](docs/failure-modes.md)
+- [`docs/demo.md`](docs/demo.md)
