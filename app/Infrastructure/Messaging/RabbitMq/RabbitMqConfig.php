@@ -18,6 +18,8 @@ readonly class RabbitMqConfig
         public int $prefetchCount,
         public int $consumerTimeoutSeconds,
         public bool $setupTopology,
+        public int $maxRetryAttempts,
+        public int $retryDelayMs,
     ) {}
 
     public static function fromConfig(): self
@@ -39,6 +41,8 @@ readonly class RabbitMqConfig
             prefetchCount: (int) $config['prefetch_count'],
             consumerTimeoutSeconds: (int) $config['consumer_timeout_seconds'],
             setupTopology: filter_var($config['setup_topology'], FILTER_VALIDATE_BOOL),
+            maxRetryAttempts: (int) $config['max_retry_attempts'],
+            retryDelayMs: (int) $config['retry_delay_ms'],
         );
     }
 

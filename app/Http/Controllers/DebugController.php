@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Payment\Enums\FailureMode;
 use App\Domain\Payment\Services\Debug\DemoResetService;
 use App\Domain\Payment\Services\Debug\FailureModeManager;
+use App\Infrastructure\Messaging\RabbitMq\DlqRequeueService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,7 @@ class DebugController extends Controller
     public function __construct(
         private readonly FailureModeManager $failureModeManager,
         private readonly DemoResetService $demoResetService,
+        private readonly DlqRequeueService $dlqRequeueService,
     ) {}
 
     public function showFailureMode(): JsonResponse
@@ -53,6 +55,30 @@ class DebugController extends Controller
         return response()->json([
             'status' => 'reset',
             'failure_mode' => FailureMode::Normal->value,
+        ]);
+    }
+
+    public function showDlq(): JsonResponse
+    {
+        $this->ensureDebugEnabled();
+
+        return response()->json([
+            'data' => $this->dlqRequeueService->stats(),
+        ]);
+    }
+
+    public function requeueDlq(Request $request): JsonResponse
+    {
+        $this->ensureDebugEnabled();
+
+        $validated = $request->validate([
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $result = $this->dlqRequeueService->requeue($validated['limit'] ?? 10);
+
+        return response()->json([
+            'data' => $result,
         ]);
     }
 

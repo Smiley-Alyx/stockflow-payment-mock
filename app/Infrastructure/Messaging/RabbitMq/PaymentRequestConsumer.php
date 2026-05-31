@@ -19,6 +19,8 @@ class PaymentRequestConsumer
         private readonly RabbitMqTopologyManager $topologyManager,
         private readonly MessageHeaderValidator $headerValidator,
         private readonly PaymentMessageDispatcher $dispatcher,
+        private readonly PaymentRequestFailureHandler $failureHandler,
+        private readonly PaymentRetryRequeueHandler $retryRequeueHandler,
     ) {}
 
     public function consume(): int
@@ -42,12 +44,24 @@ class PaymentRequestConsumer
                 no_ack: false,
                 exclusive: false,
                 nowait: false,
-                callback: fn (AMQPMessage $message): void => $this->handleMessage($channel, $message),
+                callback: fn (AMQPMessage $message): void => $this->handleRequestMessage($channel, $message),
+            );
+
+            $channel->basic_consume(
+                queue: $this->config->retryQueue,
+                consumer_tag: '',
+                no_local: false,
+                no_ack: false,
+                exclusive: false,
+                nowait: false,
+                callback: fn (AMQPMessage $message): void => $this->retryRequeueHandler->handle($channel, $message),
             );
 
             Log::info('payment request consumer started', [
                 'queue' => $this->config->requestsQueue,
+                'retry_queue' => $this->config->retryQueue,
                 'exchange' => $this->config->exchange,
+                'max_retry_attempts' => $this->config->maxRetryAttempts,
             ]);
 
             while ($channel->is_consuming() && ! $this->shouldStop) {
@@ -68,10 +82,8 @@ class PaymentRequestConsumer
         $this->shouldStop = true;
     }
 
-    private function handleMessage(AMQPChannel $channel, AMQPMessage $message): void
+    private function handleRequestMessage(AMQPChannel $channel, AMQPMessage $message): void
     {
-        $deliveryTag = $message->getDeliveryTag();
-
         try {
             $incoming = IncomingMessage::fromAmqpMessage($message, $this->headerValidator);
 
@@ -82,21 +94,11 @@ class PaymentRequestConsumer
 
             $this->dispatcher->dispatch($incoming);
 
-            $channel->basic_ack($deliveryTag);
+            $channel->basic_ack($message->getDeliveryTag());
         } catch (InvalidMessageException $exception) {
-            Log::warning('invalid payment request message rejected', [
-                'error' => $exception->getMessage(),
-                'routing_key' => $message->getRoutingKey(),
-            ]);
-
-            $channel->basic_reject($deliveryTag, false);
+            $this->failureHandler->handleInvalidMessage($channel, $message, $exception);
         } catch (Throwable $exception) {
-            Log::error('payment request processing failed', [
-                'error' => $exception->getMessage(),
-                'routing_key' => $message->getRoutingKey(),
-            ]);
-
-            $channel->basic_nack($deliveryTag, false, false);
+            $this->failureHandler->handleProcessingFailure($channel, $message, $exception);
         } finally {
             Log::withoutContext();
         }

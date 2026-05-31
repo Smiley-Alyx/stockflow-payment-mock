@@ -14,6 +14,9 @@ serve:
 consume:
 	php artisan payment-mock:consume-requests
 
+requeue-dlq:
+	php artisan payment-mock:requeue-dlq
+
 test:
 	php artisan test
 

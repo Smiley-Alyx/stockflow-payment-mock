@@ -48,6 +48,11 @@ class RabbitMqTopologyManager
             true,
             false,
             false,
+            false,
+            new AMQPTable([
+                'x-dead-letter-exchange' => $this->config->deadLetterExchange,
+                'x-dead-letter-routing-key' => $this->config->dlq,
+            ]),
         );
 
         $channel->queue_declare(

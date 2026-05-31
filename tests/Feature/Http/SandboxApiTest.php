@@ -102,4 +102,31 @@ class SandboxApiTest extends TestCase
 
         $this->postJson('/debug/reset')->assertForbidden();
     }
+
+    public function test_debug_dlq_stats_endpoint_returns_queue_metadata(): void
+    {
+        $this->mock(\App\Infrastructure\Messaging\RabbitMq\DlqRequeueService::class)
+            ->shouldReceive('stats')
+            ->once()
+            ->andReturn(['messages' => 2, 'consumers' => 0]);
+
+        $this->getJson('/debug/dlq')
+            ->assertOk()
+            ->assertJsonPath('data.messages', 2)
+            ->assertJsonPath('data.consumers', 0);
+    }
+
+    public function test_debug_dlq_requeue_endpoint_requeues_messages(): void
+    {
+        $this->mock(\App\Infrastructure\Messaging\RabbitMq\DlqRequeueService::class)
+            ->shouldReceive('requeue')
+            ->once()
+            ->with(5)
+            ->andReturn(['requeued' => 5, 'remaining' => 0]);
+
+        $this->postJson('/debug/dlq/requeue', ['limit' => 5])
+            ->assertOk()
+            ->assertJsonPath('data.requeued', 5)
+            ->assertJsonPath('data.remaining', 0);
+    }
 }

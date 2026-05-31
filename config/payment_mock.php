@@ -28,5 +28,7 @@ return [
         'consumer_timeout_seconds' => (int) env('RABBITMQ_CONSUMER_TIMEOUT_SECONDS', 30),
         'setup_topology' => env('RABBITMQ_SETUP_TOPOLOGY', true),
         'publish_events' => env('PAYMENT_MOCK_PUBLISH_EVENTS', true),
+        'max_retry_attempts' => (int) env('RABBITMQ_MAX_RETRY_ATTEMPTS', 3),
+        'retry_delay_ms' => (int) env('RABBITMQ_RETRY_DELAY_MS', 5000),
     ],
 ];

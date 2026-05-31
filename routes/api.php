@@ -21,4 +21,6 @@ Route::prefix('debug')->group(function (): void {
     Route::get('/failure-mode', [DebugController::class, 'showFailureMode']);
     Route::post('/failure-mode', [DebugController::class, 'setFailureMode']);
     Route::post('/reset', [DebugController::class, 'reset']);
+    Route::get('/dlq', [DebugController::class, 'showDlq']);
+    Route::post('/dlq/requeue', [DebugController::class, 'requeueDlq']);
 });

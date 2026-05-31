@@ -129,6 +129,32 @@ Set `PAYMENT_MOCK_PUBLISH_EVENTS=false` to disable AMQP publishing (tests use th
 Duplicate RabbitMQ requests with the same `idempotency_key` replay the stored domain
 result and republish the original outbound event (`message_id` and payload unchanged).
 
+### Retry and DLQ
+
+Transient processing failures are retried through `stockflow.payment.requests.retry`:
+
+1. Consumer acks the failed request and publishes it to the retry queue with
+   `x-retry-count` and `x-original-routing-key`.
+2. The retry consumer republishes the message to the main exchange when the optional
+   `x-retry-after` delay has elapsed.
+3. After `RABBITMQ_MAX_RETRY_ATTEMPTS`, the message is moved to
+   `stockflow.payment.requests.dlq` with failure metadata.
+
+Invalid payloads are rejected immediately to the DLQ (no retry).
+
+Manual requeue:
+
+```bash
+php artisan payment-mock:requeue-dlq --limit=10
+```
+
+Debug API (when `PAYMENT_MOCK_DEBUG_ENABLED=true`):
+
+```text
+GET  /debug/dlq
+POST /debug/dlq/requeue
+```
+
 ## Configuration
 
 | Environment variable | Default | Description |
@@ -142,6 +168,8 @@ result and republish the original outbound event (`message_id` and payload uncha
 | `PAYMENT_MOCK_DEBUG_ENABLED` | `false` | Enable `/debug/*` endpoints |
 | `PAYMENT_MOCK_ALLOW_TEST_PAN_TOKENIZATION` | `false` | Enable `POST /sandbox/tokens` |
 | `PAYMENT_MOCK_PUBLISH_EVENTS` | `true` | Publish payment result events to RabbitMQ |
+| `RABBITMQ_MAX_RETRY_ATTEMPTS` | `3` | Retry count before a request is moved to DLQ |
+| `RABBITMQ_RETRY_DELAY_MS` | `5000` | Delay before a retried request is requeued |
 
 ## Portfolio scope
 

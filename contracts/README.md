@@ -111,6 +111,25 @@ Retry behavior:
   Retries republish the original event with the same `message_id` and payload so
   the marketplace can safely reconcile duplicate deliveries.
 
+## Retry and DLQ
+
+| Header | Description |
+| --- | --- |
+| `x-retry-count` | Number of processing attempts already performed |
+| `x-original-routing-key` | Request routing key preserved across retry/DLQ |
+| `x-retry-after` | Optional epoch-ms timestamp before requeue |
+| `x-failure-reason` | Exception class name when moved to DLQ |
+| `x-failure-message` | Truncated error message in DLQ |
+
+Policy:
+
+- Invalid payloads (`InvalidMessageException`) are rejected to DLQ immediately.
+- Conflicting idempotent replays (`PublishedEventConflictException`) are not retried.
+- Other processing failures are retried up to `RABBITMQ_MAX_RETRY_ATTEMPTS` (default 3).
+- Retry queue: `stockflow.payment.requests.retry`
+- DLQ: `stockflow.payment.requests.dlq`
+- Manual requeue: `php artisan payment-mock:requeue-dlq` or `POST /debug/dlq/requeue`
+
 ## Sandbox safety
 
 - Use predefined tokens such as `tok_approved_visa`.

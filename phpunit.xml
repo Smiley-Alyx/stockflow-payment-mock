@@ -35,5 +35,7 @@
         <env name="PAYMENT_MOCK_DEBUG_ENABLED" value="true"/>
         <env name="PAYMENT_MOCK_ALLOW_TEST_PAN_TOKENIZATION" value="true"/>
         <env name="PAYMENT_MOCK_PUBLISH_EVENTS" value="false"/>
+        <env name="RABBITMQ_MAX_RETRY_ATTEMPTS" value="3"/>
+        <env name="RABBITMQ_RETRY_DELAY_MS" value="0"/>
     </php>
 </phpunit>
